@@ -1,29 +1,29 @@
-#include <Servo.h>
+#include <ESC.h>
 
 #define dirPin 2
 #define stepPin 3
 #define stepsPerRevolution 200
 
-Servo RESC,LESC;     // create servo objects to control the ESC
+ESC RESC(9, 1000, 2000, 500);
+ESC LESC(10, 1000, 2000, 500);
 
 int potValue;  // value from the analog pin
 
 void setup() {
-  // Attach the ESC on pin 9
-  RESC.attach(9,1000,2000); // (pin, min pulse width, max pulse width in microseconds)
-  LESC.attach(10,1000,2000); // (pin, min pulse width, max pulse width in microseconds)
-  Serial.begin(9600);
+   motorCalibration();
+   motorArm();
+   Serial.begin(9600);
 }
 
 void loop() {
-   runBoat();
-   delay(3000);
+   testRight();
+   delay(15);
 }
 
 /////////////////tests////////////////////////////////////////
 int potValForBLDC(){
   potValue = analogRead(A0);   // reads the value of the potentiometer (value between 0 and 1023)
-  potValue = map(potValue, 0, 1023, 0, 180);   // scale it to use it with the servo library (value between 0 and 180)
+  potValue = map(potValue, 0, 1023, 1000, 2000);   // scale it to use it with the servo library (value between 0 and 180)
   Serial.print("BLDC SPEED: ");
   Serial.println(potValue);
   return potValue;
@@ -39,12 +39,12 @@ int potValForStepper(){
 
 void testRight(){
    int speed = potValForBLDC();
-   RESC.write(speed);
+   RESC.speed(speed);
 }
 
 void testLeft(){
    int speed = potValForBLDC();
-   LESC.write(speed);
+   LESC.speed(speed);
 }
 
 void testShredderForwarrd(){
@@ -73,20 +73,31 @@ void testShredderBackwarrd(){
 /////////////////tests////////////////////////////////////////
 
 ////////////////Functions/////////////////////////////////////
+void motorCalibration(){
+   RESC.calib();
+   LESC.calib();
+   RESC.stop();
+   LESC.stop();
+}
+
+void motorArm(){
+   RESC.arm();
+   LESC.arm();
+}
 
 void runForward(int speed){
-   RESC.write(speed);
-   LESC.write(speed);
+   RESC.speed(speed);
+   LESC.speed(speed);
 }
 
 void turnLeft(int speed){
-   RESC.write(2*speed);
-   LESC.write(speed);
+   RESC.speed(2*speed);
+   LESC.speed(speed);
 }
 
 void turnRight(int speed) {
-   RESC.write(speed);
-   LESC.write(2*speed);
+   RESC.speed(speed);
+   LESC.speed(2*speed);
 }
 
 void shred(boolean isForward, int revs, int speed){
@@ -101,8 +112,8 @@ void shred(boolean isForward, int revs, int speed){
 }
 
 void idle(){
-   RESC.write(0);
-   LESC.write(0);
+   RESC.stop();
+   LESC.stop();
    digitalWrite(stepPin, LOW);
    digitalWrite(dirPin, LOW);
 }
