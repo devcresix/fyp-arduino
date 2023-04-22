@@ -23,7 +23,7 @@ void setup() {
 }
 
 void loop() {
-   runForward(1200);
+   runBoat();
    delay(15);
 }
 
